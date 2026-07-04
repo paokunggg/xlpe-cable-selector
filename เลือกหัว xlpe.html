@@ -37,7 +37,16 @@
   .kv-cell { display: flex; flex-wrap: wrap; gap: 2px; }
   .kv-cell label { font-size: 11px; white-space: nowrap; display: flex; align-items: center; gap: 2px; cursor: pointer; }
   .kv-cell input[type=checkbox] { width: 12px; height: 12px; accent-color: #1a5276; }
-  #data-table th:nth-child(2), #data-table td:nth-child(2) { min-width: 160px; }
+  #data-table { table-layout: fixed; width: 100%; }
+  #data-table th:nth-child(1), #data-table td:nth-child(1) { width: 140px; }
+  #data-table th:nth-child(2), #data-table td:nth-child(2) { width: 180px; }
+  #data-table th:nth-child(3), #data-table td:nth-child(3) { width: 100px; }
+  #data-table th:nth-child(4), #data-table td:nth-child(4), #data-table th:nth-child(5), #data-table td:nth-child(5),
+  #data-table th:nth-child(6), #data-table td:nth-child(6), #data-table th:nth-child(7), #data-table td:nth-child(7) { width: 80px; }
+  #data-table th:nth-child(8), #data-table td:nth-child(8) { width: 44px; }
+  #data-table td { word-break: break-word; }
+  #data-table td input[type=text] { width: 100%; }
+  #data-table td input[type=number] { width: 100%; }
   #result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   #result-table th { background: #1a5276; color: #fff; padding: 9px 12px; text-align: center; border: 1px solid #155; }
   #result-table td { padding: 8px 12px; border: 1px solid #ddd; text-align: center; }
@@ -138,7 +147,7 @@
       <span class="input-label">Overall diameter (mm.)</span>
       <input class="input-yellow" type="number" id="inp_od" value="55" step="0.01" oninput="calculate()">
 
-      <span class="input-label">kV (???????????????)</span>
+      <span class="input-label">kV (เลือกได้หลายค่า)</span>
       <div class="kv-checks">
         <label><input type="checkbox" class="kv-filter" value="11" onchange="calculate()"> 11 kV</label>
         <label><input type="checkbox" class="kv-filter" value="22" onchange="calculate()"> 22 kV</label>
@@ -169,6 +178,8 @@
       <thead>
         <tr>
           <th>รุ่น</th>
+          <th>kV</th>
+          <th>Type</th>
           <th>Insulation OD min</th>
           <th>Insulation OD max</th>
           <th>Jacket OD min</th>
@@ -294,7 +305,7 @@ function calculate() {
   const tbody = document.getElementById('result-body');
   tbody.innerHTML = '';
   if (matches.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="no-result">???????????????????</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="no-result">ไม่พบรุ่นที่เหมาะสม</td></tr>';
   } else {
     matches.forEach(row => {
       const kvList = Array.isArray(row.kv) ? row.kv.join(', ') : '';
@@ -314,10 +325,10 @@ function calculate() {
 
 function kvMultiSelect(rowIdx, selected) {
   const sel = Array.isArray(selected) ? selected : [];
-  const opts = KV_OPTIONS.map(v =>
-    `<option value="${v}" ${sel.includes(v)?'selected':''}>${v} kV</option>`
-  ).join('');
-  return `<select multiple data-idx="${rowIdx}" data-field="kv" style="width:100%;min-height:80px;font-size:12px;padding:2px">${opts}</select>`;
+  return KV_OPTIONS.map(v => {
+    const chk = sel.includes(v) ? 'checked' : '';
+    return `<label style="display:inline-flex;align-items:center;gap:2px;margin:2px 4px 2px 0;font-size:11px;white-space:nowrap;cursor:pointer"><input type="checkbox" class="kv-edit" data-idx="${rowIdx}" data-kv="${v}" ${chk} style="width:12px;height:12px;accent-color:#1a5276"> ${v}</label>`;
+  }).join('');
 }
 
 function renderDataTable() {
@@ -362,13 +373,12 @@ async function saveData() {
     document.querySelectorAll(`#data-body select[data-idx="${i}"]`).forEach(sel => {
       newRow[sel.dataset.field] = sel.value;
     });
-    const kvSel = document.querySelector(`select[data-idx="${i}"][data-field="kv"]`);
-    newRow.kv = kvSel ? Array.from(kvSel.selectedOptions).map(o => Number(o.value)) : [];
+    newRow.kv = Array.from(document.querySelectorAll(`.kv-edit[data-idx="${i}"]:checked`)).map(c => Number(c.dataset.kv));
     return newRow;
   });
 
   const btn = document.querySelector('.btn-save');
-  btn.textContent = '???????????...';
+  btn.textContent = 'กำลังบันทึก...';
   btn.disabled = true;
   try {
     await saveToCloud(updated);
@@ -381,7 +391,7 @@ async function saveData() {
   } catch(e) {
     alert('???????????????: ' + e.message);
   } finally {
-    btn.textContent = '?? ??????';
+    btn.textContent = '&#128190; บันทึก';
     btn.disabled = false;
   }
 }
