@@ -138,7 +138,7 @@
       <span class="input-label">Overall diameter (mm.)</span>
       <input class="input-yellow" type="number" id="inp_od" value="55" step="0.01" oninput="calculate()">
 
-      <span class="input-label">kV (???????????????)</span>
+      <span class="input-label">kV (เลือกได้หลายค่า)</span>
       <div class="kv-checks">
         <label><input type="checkbox" class="kv-filter" value="11" onchange="calculate()"> 11 kV</label>
         <label><input type="checkbox" class="kv-filter" value="22" onchange="calculate()"> 22 kV</label>
@@ -150,7 +150,7 @@
 
       <span class="input-label">Type</span>
       <select class="filter-select" id="type-filter" onchange="calculate()">
-        <option value="">???????</option>
+        <option value="">ทั้งหมด</option>
         <option value="Plugin">Plugin</option>
         <option value="Outdoor">Outdoor</option>
       </select>
@@ -169,6 +169,8 @@
       <thead>
         <tr>
           <th>รุ่น</th>
+          <th>kV</th>
+          <th>Type</th>
           <th>Insulation OD min</th>
           <th>Insulation OD max</th>
           <th>Jacket OD min</th>
@@ -292,7 +294,7 @@ function calculate() {
   const tbody = document.getElementById('result-body');
   tbody.innerHTML = '';
   if (matches.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="no-result">???????????????????</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="no-result">ไม่พบรุ่นที่เหมาะสม</td></tr>';
   } else {
     matches.forEach(row => {
       const kvList = Array.isArray(row.kv) ? row.kv.join(', ') : '';
@@ -344,7 +346,7 @@ function addDataRow() {
 }
 
 function deleteRow(idx) {
-  if (cableData.length <= 1) { alert('????????????????????? 1 ????'); return; }
+  if (cableData.length <= 1) { alert('ต้องมีข้อมูลอย่างน้อย 1 รุ่น'); return; }
   cableData.splice(idx, 1);
   renderDataTable();
 }
@@ -365,7 +367,7 @@ async function saveData() {
   });
 
   const btn = document.querySelector('.btn-save');
-  btn.textContent = '???????????...';
+  btn.textContent = 'กำลังบันทึก...';
   btn.disabled = true;
   try {
     await saveToCloud(updated);
@@ -376,9 +378,9 @@ async function saveData() {
     notice.classList.add('show');
     setTimeout(() => notice.classList.remove('show'), 2500);
   } catch(e) {
-    alert('???????????????: ' + e.message);
+    alert('บันทึกไม่สำเร็จ: ' + e.message);
   } finally {
-    btn.textContent = '?? ??????';
+    btn.textContent = '&#128190; บันทึก';
     btn.disabled = false;
   }
 }
