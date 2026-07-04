@@ -29,6 +29,15 @@
 
   /* Results */
   .results-section { padding: 0 24px 24px; }
+  .kv-checks { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  .kv-checks label { display: flex; align-items: center; gap: 4px; font-size: 13px; cursor: pointer; }
+  .kv-checks input[type=checkbox] { width: 14px; height: 14px; cursor: pointer; accent-color: #1a5276; }
+  .filter-row { display: flex; align-items: center; gap: 10px; }
+  .filter-select { border: 1px solid #ccc; border-radius: 3px; padding: 5px 8px; font-size: 13px; background: #ffff00; cursor: pointer; }
+  .kv-cell { display: flex; flex-wrap: wrap; gap: 2px; }
+  .kv-cell label { font-size: 11px; white-space: nowrap; display: flex; align-items: center; gap: 2px; cursor: pointer; }
+  .kv-cell input[type=checkbox] { width: 12px; height: 12px; accent-color: #1a5276; }
+  #data-table th:nth-child(2), #data-table td:nth-child(2) { min-width: 160px; }
   #result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   #result-table th { background: #1a5276; color: #fff; padding: 9px 12px; text-align: center; border: 1px solid #155; }
   #result-table td { padding: 8px 12px; border: 1px solid #ddd; text-align: center; }
@@ -129,7 +138,25 @@
       <span class="input-label">Overall diameter (mm.)</span>
       <input class="input-yellow" type="number" id="inp_od" value="55" step="0.01" oninput="calculate()">
 
+      <span class="input-label">kV (???????????????)</span>
+      <div class="kv-checks">
+        <label><input type="checkbox" class="kv-filter" value="11" onchange="calculate()"> 11 kV</label>
+        <label><input type="checkbox" class="kv-filter" value="22" onchange="calculate()"> 22 kV</label>
+        <label><input type="checkbox" class="kv-filter" value="33" onchange="calculate()"> 33 kV</label>
+        <label><input type="checkbox" class="kv-filter" value="115" onchange="calculate()"> 115 kV</label>
+        <label><input type="checkbox" class="kv-filter" value="230" onchange="calculate()"> 230 kV</label>
+        <label><input type="checkbox" class="kv-filter" value="500" onchange="calculate()"> 500 kV</label>
+      </div>
+
+      <span class="input-label">Type</span>
+      <select class="filter-select" id="type-filter" onchange="calculate()">
+        <option value="">???????</option>
+        <option value="Plugin">Plugin</option>
+        <option value="Outdoor">Outdoor</option>
+      </select>
+
       <hr class="divider" style="grid-column:1/-1">
+
 
       <span class="input-label"><strong>Insulation OD (คำนวณ)</strong> = j + 2k + 2l (mm.)</span>
       <input class="input-calc" type="text" id="ins_od" readonly>
@@ -200,10 +227,10 @@
 </div>
 
 <script>
-const BIN_ID = '6a43a150f5f4af5e2946dcf5';
+const BIN_ID     = '6a43a150f5f4af5e2946dcf5';
 const MASTER_KEY = '$2a$10$QGsMLM5eEUacOP3iZbfYM.TRgGIzLUjuEu3rANAVsZKXI4G5KNNf6';
-const ACCESS_KEY = '$2a$10$Zim4ZE7fXY4Lpy5EMy2.5OaGO5kdoJrJ4Ws7PaCt9eBvgIJ2moowy';
 const EDIT_PASSWORD = 'breaker';
+const KV_OPTIONS   = [11, 22, 33, 115, 230, 500];
 
 let cableData = [];
 
@@ -216,7 +243,6 @@ async function fetchData() {
     cableData = json.record;
     calculate();
   } catch(e) {
-    console.error('Fetch error:', e);
     cableData = getDefaultData();
     calculate();
   }
@@ -225,10 +251,7 @@ async function fetchData() {
 async function saveToCloud(data) {
   const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Master-Key': MASTER_KEY
-    },
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
     body: JSON.stringify(data)
   });
   if (!res.ok) throw new Error('Save failed: ' + res.status);
@@ -237,35 +260,47 @@ async function saveToCloud(data) {
 
 function getDefaultData() {
   return [
-    { model: 'APKT-24-A1XO-T', insODmin: 14, insODmax: 21, jacketODmin: 13, jacketODmax: 33 },
-    { model: 'APKT-24-B1XO-T', insODmin: 19, insODmax: 34, jacketODmin: 13, jacketODmax: 33 },
-    { model: 'APKT-24-C1XO-T', insODmin: 19, insODmax: 34, jacketODmin: 18, jacketODmax: 38 },
-    { model: 'APKT-24-D1XO-T', insODmin: 23, insODmax: 37, jacketODmin: 23, jacketODmax: 50 },
-    { model: 'APKT-24-E1XO-T', insODmin: 35, insODmax: 48, jacketODmin: 32, jacketODmax: 70 },
-    { model: 'APKT-24-F1XO-T', insODmin: 40, insODmax: 61, jacketODmin: 32, jacketODmax: 70 },
+    { model:'APKT-24-A1XO-T', kv:[], type:'', insODmin:14, insODmax:21, jacketODmin:13, jacketODmax:33 },
+    { model:'APKT-24-B1XO-T', kv:[], type:'', insODmin:19, insODmax:34, jacketODmin:13, jacketODmax:33 },
+    { model:'APKT-24-C1XO-T', kv:[], type:'', insODmin:19, insODmax:34, jacketODmin:18, jacketODmax:38 },
+    { model:'APKT-24-D1XO-T', kv:[], type:'', insODmin:23, insODmax:37, jacketODmin:23, jacketODmax:50 },
+    { model:'APKT-24-E1XO-T', kv:[], type:'', insODmin:35, insODmax:48, jacketODmin:32, jacketODmax:70 },
+    { model:'APKT-24-F1XO-T', kv:[], type:'', insODmin:40, insODmax:61, jacketODmin:32, jacketODmax:70 },
   ];
 }
 
 function calculate() {
-  const j = parseFloat(document.getElementById('inp_j').value) || 0;
-  const k = parseFloat(document.getElementById('inp_k').value) || 0;
-  const l = parseFloat(document.getElementById('inp_l').value) || 0;
-  const od = parseFloat(document.getElementById('inp_od').value) || 0;
-  const insOD = j + 2 * k + 2 * l;
+  const j   = parseFloat(document.getElementById('inp_j').value)  || 0;
+  const k   = parseFloat(document.getElementById('inp_k').value)  || 0;
+  const l   = parseFloat(document.getElementById('inp_l').value)  || 0;
+  const od  = parseFloat(document.getElementById('inp_od').value) || 0;
+  const insOD = j + 2*k + 2*l;
   document.getElementById('ins_od').value = insOD.toFixed(2);
-  const matches = cableData.filter(row =>
-    insOD > row.insODmin && insOD < row.insODmax &&
-    od > row.jacketODmin && od < row.jacketODmax
-  );
+
+  const selKV   = Array.from(document.querySelectorAll('.kv-filter:checked')).map(c => Number(c.value));
+  const selType = document.getElementById('type-filter').value;
+
+  const matches = cableData.filter(row => {
+    const rowKV = Array.isArray(row.kv) ? row.kv : [];
+    if (insOD <= row.insODmin || insOD >= row.insODmax) return false;
+    if (od    <= row.jacketODmin || od >= row.jacketODmax) return false;
+    if (selKV.length > 0 && !selKV.some(v => rowKV.includes(v))) return false;
+    if (selType && row.type !== selType) return false;
+    return true;
+  });
+
   const tbody = document.getElementById('result-body');
   tbody.innerHTML = '';
   if (matches.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="no-result">???????????????????</td></tr>`;
+    tbody.innerHTML = '<tr><td colspan="7" class="no-result">???????????????????</td></tr>';
   } else {
     matches.forEach(row => {
+      const kvList = Array.isArray(row.kv) ? row.kv.join(', ') : '';
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><span class="match-badge">${row.model}</span></td>
+        <td>${kvList}</td>
+        <td>${row.type || ''}</td>
         <td>${row.insODmin}</td>
         <td>${row.insODmax}</td>
         <td>${row.jacketODmin}</td>
@@ -275,13 +310,25 @@ function calculate() {
   }
 }
 
+function kvCheckboxes(rowIdx, selected) {
+  return KV_OPTIONS.map(v => {
+    const chk = Array.isArray(selected) && selected.includes(v) ? 'checked' : '';
+    return `<label><input type="checkbox" class="kv-edit" data-idx="${rowIdx}" data-kv="${v}" ${chk}> ${v}</label>`;
+  }).join('');
+}
+
 function renderDataTable() {
   const tbody = document.getElementById('data-body');
   tbody.innerHTML = '';
   cableData.forEach((row, i) => {
+    const typeOpts = ['', 'Plugin', 'Outdoor'].map(t =>
+      `<option value="${t}" ${row.type===t?'selected':''}>${t||'-- ????? --'}</option>`
+    ).join('');
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input type="text" value="${row.model}" data-idx="${i}" data-field="model"></td>
+      <td><div class="kv-cell">${kvCheckboxes(i, row.kv)}</div></td>
+      <td><select data-idx="${i}" data-field="type" style="width:100%;padding:4px;font-size:12px">${typeOpts}</select></td>
       <td><input type="number" value="${row.insODmin}" data-idx="${i}" data-field="insODmin" step="0.01"></td>
       <td><input type="number" value="${row.insODmax}" data-idx="${i}" data-field="insODmax" step="0.01"></td>
       <td><input type="number" value="${row.jacketODmin}" data-idx="${i}" data-field="jacketODmin" step="0.01"></td>
@@ -292,7 +339,7 @@ function renderDataTable() {
 }
 
 function addDataRow() {
-  cableData.push({ model: 'APKT-24-NEW', insODmin: 0, insODmax: 0, jacketODmin: 0, jacketODmax: 0 });
+  cableData.push({ model:'APKT-24-NEW', kv:[], type:'', insODmin:0, insODmax:0, jacketODmin:0, jacketODmax:0 });
   renderDataTable();
 }
 
@@ -303,13 +350,20 @@ function deleteRow(idx) {
 }
 
 async function saveData() {
-  const inputs = document.querySelectorAll('#data-body input');
-  const updated = JSON.parse(JSON.stringify(cableData));
-  inputs.forEach(inp => {
-    const idx = parseInt(inp.dataset.idx);
-    const field = inp.dataset.field;
-    updated[idx][field] = field === 'model' ? inp.value : (parseFloat(inp.value) || 0);
+  const updated = cableData.map((row, i) => {
+    const newRow = { ...row };
+    document.querySelectorAll(`#data-body input[data-idx="${i}"][data-field]`).forEach(inp => {
+      const f = inp.dataset.field;
+      newRow[f] = f === 'model' ? inp.value : (parseFloat(inp.value) || 0);
+    });
+    document.querySelectorAll(`#data-body select[data-idx="${i}"]`).forEach(sel => {
+      newRow[sel.dataset.field] = sel.value;
+    });
+    newRow.kv = Array.from(document.querySelectorAll(`.kv-edit[data-idx="${i}"]:checked`))
+                     .map(c => Number(c.dataset.kv));
+    return newRow;
   });
+
   const btn = document.querySelector('.btn-save');
   btn.textContent = '???????????...';
   btn.disabled = true;
@@ -324,7 +378,7 @@ async function saveData() {
   } catch(e) {
     alert('???????????????: ' + e.message);
   } finally {
-    btn.textContent = '\u{1F4BE} ??????';
+    btn.textContent = '?? ??????';
     btn.disabled = false;
   }
 }
@@ -337,8 +391,7 @@ function openPasswordModal() {
 }
 
 function checkPassword() {
-  const val = document.getElementById('pw-input').value;
-  if (val === EDIT_PASSWORD) {
+  if (document.getElementById('pw-input').value === EDIT_PASSWORD) {
     document.getElementById('pw-modal').classList.remove('active');
     openDataEditor();
   } else {
@@ -352,14 +405,8 @@ function openDataEditor() {
   renderDataTable();
   document.getElementById('data-modal').classList.add('active');
 }
-
-function closeDataEditor() {
-  document.getElementById('data-modal').classList.remove('active');
-}
-
-function closePwModal() {
-  document.getElementById('pw-modal').classList.remove('active');
-}
+function closeDataEditor() { document.getElementById('data-modal').classList.remove('active'); }
+function closePwModal()    { document.getElementById('pw-modal').classList.remove('active'); }
 
 document.getElementById('data-modal').addEventListener('click', function(e) {
   if (e.target === this) closeDataEditor();
@@ -369,9 +416,7 @@ function openLightbox(imgEl) {
   document.getElementById('lightbox-img').src = imgEl.src;
   document.getElementById('lightbox').classList.add('active');
 }
-function closeLightbox() {
-  document.getElementById('lightbox').classList.remove('active');
-}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('active'); }
 
 document.getElementById('pw-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') checkPassword();
