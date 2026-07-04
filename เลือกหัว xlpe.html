@@ -208,6 +208,8 @@
         <thead>
           <tr>
             <th>รุ่น (Model)</th>
+            <th>kV</th>
+            <th>Type</th>
             <th>Insulation OD min</th>
             <th>Insulation OD max</th>
             <th>Jacket OD min</th>
@@ -217,7 +219,7 @@
         </thead>
         <tbody id="data-body"></tbody>
       </table>
-      <p class="note">* ข้อมูลจะถูกบันทึกในเครื่องและจะยังคงอยู่เมื่อเปิดใหม่</p>
+      <p class="note">* ข้อมูลจะถูกบันทึกบน Cloud และจะเห็นเหมือนกันทุกเครื่อง</p>
     </div>
     <div class="modal-footer">
       <button class="btn-add-row" onclick="addDataRow()">+ เพิ่มรุ่น</button>
@@ -324,7 +326,7 @@ function renderDataTable() {
   tbody.innerHTML = '';
   cableData.forEach((row, i) => {
     const typeOpts = ['', 'Plugin', 'Outdoor'].map(t =>
-      `<option value="${t}" ${row.type===t?'selected':''}>${t||'-- ????? --'}</option>`
+      `<option value="${t}" ${row.type===t?'selected':''}>${t||'-- เลือก --'}</option>`
     ).join('');
     const tr = document.createElement('tr');
     tr.innerHTML = `
