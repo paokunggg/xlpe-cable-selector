@@ -206,6 +206,8 @@
         <thead>
           <tr>
             <th>รุ่น (Model)</th>
+            <th>kV</th>
+            <th>Type</th>
             <th>Insulation OD min</th>
             <th>Insulation OD max</th>
             <th>Jacket OD min</th>
@@ -215,7 +217,7 @@
         </thead>
         <tbody id="data-body"></tbody>
       </table>
-      <p class="note">* ข้อมูลจะถูกบันทึกในเครื่องและจะยังคงอยู่เมื่อเปิดใหม่</p>
+      <p class="note">* ข้อมูลจะถูกบันทึกบน Cloud — ทุกเครื่องเห็นเหมือนกัน</p>
     </div>
     <div class="modal-footer">
       <button class="btn-add-row" onclick="addDataRow()">+ เพิ่มรุ่น</button>
@@ -310,24 +312,25 @@ function calculate() {
   }
 }
 
-function kvCheckboxes(rowIdx, selected) {
-  return KV_OPTIONS.map(v => {
-    const chk = Array.isArray(selected) && selected.includes(v) ? 'checked' : '';
-    return `<label><input type="checkbox" class="kv-edit" data-idx="${rowIdx}" data-kv="${v}" ${chk}> ${v}</label>`;
-  }).join('');
+function kvMultiSelect(rowIdx, selected) {
+  const sel = Array.isArray(selected) ? selected : [];
+  const opts = KV_OPTIONS.map(v =>
+    `<option value="${v}" ${sel.includes(v)?'selected':''}>${v} kV</option>`
+  ).join('');
+  return `<select multiple data-idx="${rowIdx}" data-field="kv" style="width:100%;min-height:80px;font-size:12px;padding:2px">${opts}</select>`;
 }
 
 function renderDataTable() {
   const tbody = document.getElementById('data-body');
   tbody.innerHTML = '';
   cableData.forEach((row, i) => {
-    const typeOpts = ['', 'Plugin', 'Outdoor'].map(t =>
-      `<option value="${t}" ${row.type===t?'selected':''}>${t||'-- ????? --'}</option>`
+    const typeOpts = [['','-- เลือก --'],['Plugin','Plugin'],['Outdoor','Outdoor']].map(([v,l]) =>
+      `<option value="${v}" ${row.type===v?'selected':''}>${l}</option>`
     ).join('');
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input type="text" value="${row.model}" data-idx="${i}" data-field="model"></td>
-      <td><div class="kv-cell">${kvCheckboxes(i, row.kv)}</div></td>
+      <td>${kvMultiSelect(i, row.kv)}</td>
       <td><select data-idx="${i}" data-field="type" style="width:100%;padding:4px;font-size:12px">${typeOpts}</select></td>
       <td><input type="number" value="${row.insODmin}" data-idx="${i}" data-field="insODmin" step="0.01"></td>
       <td><input type="number" value="${row.insODmax}" data-idx="${i}" data-field="insODmax" step="0.01"></td>
@@ -344,7 +347,7 @@ function addDataRow() {
 }
 
 function deleteRow(idx) {
-  if (cableData.length <= 1) { alert('????????????????????? 1 ????'); return; }
+  if (cableData.length <= 1) { alert('ต้องมีข้อมูลอย่างน้อย 1 รุ่น'); return; }
   cableData.splice(idx, 1);
   renderDataTable();
 }
@@ -359,8 +362,8 @@ async function saveData() {
     document.querySelectorAll(`#data-body select[data-idx="${i}"]`).forEach(sel => {
       newRow[sel.dataset.field] = sel.value;
     });
-    newRow.kv = Array.from(document.querySelectorAll(`.kv-edit[data-idx="${i}"]:checked`))
-                     .map(c => Number(c.dataset.kv));
+    const kvSel = document.querySelector(`select[data-idx="${i}"][data-field="kv"]`);
+    newRow.kv = kvSel ? Array.from(kvSel.selectedOptions).map(o => Number(o.value)) : [];
     return newRow;
   });
 
