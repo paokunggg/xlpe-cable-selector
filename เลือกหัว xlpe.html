@@ -97,6 +97,24 @@
 
   .saved-notice { display: none; background: #d5f5e3; border: 1px solid #27ae60; color: #1e8449; padding: 6px 14px; border-radius: 4px; font-size: 12px; }
   .saved-notice.show { display: inline-block; }
+
+  /* Supplier section */
+  .supplier-section { padding: 0 24px 24px; }
+  .supplier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .btn-edit-supplier { background: #117a65; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
+  .btn-edit-supplier:hover { background: #0e6655; }
+  #supplier-display-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  #supplier-display-table th { background: #1a5276; color: #fff; padding: 7px 8px; text-align: center; border: 1px solid #155; }
+  #supplier-display-table th.grp-outdoor { background: #2e86c1; }
+  #supplier-display-table th.grp-indoor  { background: #117a65; }
+  #supplier-display-table td { padding: 6px 8px; border: 1px solid #ddd; text-align: center; vertical-align: middle; }
+  #supplier-display-table tr:nth-child(even) td { background: #f7f7f7; }
+  #supplier-display-table tr:hover td { background: #d6eaf8; }
+  #supplier-modal .modal { width: 1100px; }
+  #supplier-edit-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  #supplier-edit-table th { background: #2c3e50; color: #fff; padding: 7px 8px; border: 1px solid #555; text-align: center; white-space: nowrap; }
+  #supplier-edit-table td { padding: 3px 4px; border: 1px solid #ddd; }
+  #supplier-edit-table input { width: 100%; border: 1px solid #bbb; padding: 3px 5px; border-radius: 2px; font-size: 12px; background: #fffde7; }
 </style>
 </head>
 <body>
@@ -104,7 +122,10 @@
 <div class="container">
   <div class="header">
     <h1>เลือกหัวสาย XLPE (Cable Head Selection)</h1>
-    <button class="btn-edit" onclick="openPasswordModal()">&#9998; แก้ไขข้อมูลรุ่น (data)</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn-edit" onclick="openPasswordModal('data')">&#9998; แก้ไขข้อมูลรุ่น (data)</button>
+      <button class="btn-edit-supplier" onclick="openPasswordModal('supplier')">&#9998; แก้ไข Supplier</button>
+    </div>
   </div>
 
 
@@ -163,7 +184,7 @@
     </div>
   </div>
 
-  <p style="color:red;font-weight:bold;margin:8px 0 4px;">หางปลาให้เลือกตาม ขนาดของตัวนำ</p>
+  <p style="color:red;font-weight:bold;margin:8px 0 4px;padding:0 24px;">หางปลาให้เลือกตาม ขนาดของตัวนำ</p>
 
   <div class="results-section">
     <div class="section-title">รุ่นที่สามารถใช้งานได้</div>
@@ -181,6 +202,34 @@
       </thead>
       <tbody id="result-body"></tbody>
     </table>
+  </div>
+
+  <!-- Supplier Display Section -->
+  <div class="supplier-section">
+    <div class="supplier-header">
+      <div class="section-title">ข้อมูล Supplier</div>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="supplier-display-table">
+        <thead>
+          <tr>
+            <th rowspan="2">Voltage</th>
+            <th rowspan="2">ตัวแทนจำหน่าย</th>
+            <th rowspan="2">ผู้ติดต่อ</th>
+            <th rowspan="2">Email</th>
+            <th rowspan="2">โทร.</th>
+            <th colspan="2" class="grp-outdoor">Outdoor</th>
+            <th colspan="1" class="grp-indoor">Indoor</th>
+          </tr>
+          <tr>
+            <th class="grp-outdoor">Cold Shrinkable</th>
+            <th class="grp-outdoor">Heat Shrinkable</th>
+            <th class="grp-indoor">Plug-in</th>
+          </tr>
+        </thead>
+        <tbody id="supplier-display-body"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -226,8 +275,45 @@
     <div class="modal-footer">
       <button class="btn-add-row" onclick="addDataRow()">+ เพิ่มรุ่น</button>
       <span id="saved-notice" class="saved-notice">&#10003; บันทึกแล้ว</span>
-      <button class="btn-save" onclick="saveData()">&#128190; บันทึก</button>
+      <button id="data-save-btn" class="btn-save" onclick="saveData()">&#128190; บันทึก</button>
       <button class="btn-cancel" onclick="closeDataEditor()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supplier Editor Modal -->
+<div class="modal-overlay" id="supplier-modal">
+  <div class="modal" style="width:1100px;max-width:98vw">
+    <div class="modal-header">
+      <h2>&#9998; แก้ไขข้อมูล Supplier</h2>
+      <button class="modal-close" onclick="closeSupplierEditor()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="overflow-x:auto">
+        <table id="supplier-edit-table">
+          <thead>
+            <tr>
+              <th>Voltage</th>
+              <th>ตัวแทนจำหน่าย</th>
+              <th>ผู้ติดต่อ</th>
+              <th>Email</th>
+              <th>โทร.</th>
+              <th>Outdoor<br>Cold Shrinkable</th>
+              <th>Outdoor<br>Heat Shrinkable</th>
+              <th>Indoor<br>Plug-in</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="supplier-edit-body"></tbody>
+        </table>
+      </div>
+      <p class="note">* ข้อมูลจะถูกบันทึกบน Cloud และจะเห็นเหมือนกันทุกเครื่อง</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-add-row" onclick="addSupplierRow()">+ เพิ่มแถว</button>
+      <span id="supplier-saved-notice" class="saved-notice">&#10003; บันทึกแล้ว</span>
+      <button id="supplier-save-btn" class="btn-save" onclick="saveSupplierData()">&#128190; บันทึก</button>
+      <button class="btn-cancel" onclick="closeSupplierEditor()">ยกเลิก</button>
     </div>
   </div>
 </div>
@@ -239,6 +325,8 @@ const EDIT_PASSWORD = 'breaker';
 const KV_OPTIONS   = [11, 22, 33, 115, 230, 500];
 
 let cableData = [];
+let supplierData = [];
+let pendingTarget = 'data';
 
 async function fetchData() {
   try {
@@ -246,23 +334,118 @@ async function fetchData() {
       headers: { 'X-Master-Key': MASTER_KEY }
     });
     const json = await res.json();
-    cableData = json.record;
-    calculate();
+    const rec = json.record;
+    if (Array.isArray(rec)) {
+      cableData = rec;
+      supplierData = getDefaultSupplierData();
+    } else {
+      cableData = rec.cables || getDefaultData();
+      supplierData = rec.suppliers || getDefaultSupplierData();
+    }
   } catch(e) {
     cableData = getDefaultData();
-    calculate();
+    supplierData = getDefaultSupplierData();
   }
+  calculate();
+  renderSupplierDisplay();
 }
 
-async function saveToCloud(data) {
+async function saveToCloud(cables, suppliers) {
   const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-    body: JSON.stringify(data)
+    body: JSON.stringify({ cables, suppliers })
   });
   if (!res.ok) throw new Error('Save failed: ' + res.status);
   return res.json();
 }
+
+function getDefaultSupplierData() {
+  return [
+    { voltage:'22&33', distributor:'sky commercial', contact:'ศิริจันทร์ คำด้วง', email:'sirijun.k@skycommercial.co.th', tel:'0863257116', outdoorCold:'TE Raychem', outdoorHeat:'TE Raychem', indoorPlugin:'TE Raychem' },
+    { voltage:'22&33', distributor:'KNP (บริษัทลูก กันกุล)', contact:'ไมตรี ถาวรชีพ', email:'mitree@gunkul.com', tel:'0851551242', outdoorCold:'3M', outdoorHeat:'', indoorPlugin:'' },
+    { voltage:'22&33', distributor:'KNP (บริษัทลูก กันกุล)', contact:'ไมตรี ถาวรชีพ', email:'mitree@gunkul.com', tel:'0851551242', outdoorCold:'TE Raychem', outdoorHeat:'TE Raychem', indoorPlugin:'TE Raychem' },
+    { voltage:'22&33', distributor:'Thaivirawat', contact:'ภัทรา วิไลแก้ว', email:'tvw@thaivirawat.com', tel:'0851235763', outdoorCold:'3M', outdoorHeat:'', indoorPlugin:'' },
+    { voltage:'22&33', distributor:'Eletech', contact:'หัฐพล บำรุงเพชร', email:'hatapol@eletech.co.th', tel:'0841589667', outdoorCold:'', outdoorHeat:'Euromold', indoorPlugin:'Pfisterer' },
+    { voltage:'22&33', distributor:'หจก. NTE Electric', contact:'สุนัย พุกประมาณ', email:'Sunaipuk@yahoo.co.th', tel:'0924496565', outdoorCold:'Euromold', outdoorHeat:'Euromold', indoorPlugin:'Euromold' },
+    { voltage:'22&33', distributor:'หจก. NTE Electric', contact:'สุนัย พุกประมาณ', email:'Sunaipuk@yahoo.co.th', tel:'0924496565', outdoorCold:'NKT (Slip-on)', outdoorHeat:'', indoorPlugin:'' },
+  ];
+}
+
+function renderSupplierDisplay() {
+  const tbody = document.getElementById('supplier-display-body');
+  tbody.innerHTML = '';
+  supplierData.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${row.voltage||''}</td><td>${row.distributor||''}</td><td>${row.contact||''}</td>
+      <td><a href="mailto:${row.email||''}">${row.email||''}</a></td><td>${row.tel||''}</td>
+      <td>${row.outdoorCold||''}</td><td>${row.outdoorHeat||''}</td><td>${row.indoorPlugin||''}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderSupplierEditTable() {
+  const tbody = document.getElementById('supplier-edit-body');
+  tbody.innerHTML = '';
+  supplierData.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    const f = (field, val) => `<input type="text" value="${(val||'').replace(/"/g,'&quot;')}" data-sidx="${i}" data-sfield="${field}">`;
+    tr.innerHTML = `
+      <td style="min-width:70px">${f('voltage', row.voltage)}</td>
+      <td style="min-width:150px">${f('distributor', row.distributor)}</td>
+      <td style="min-width:120px">${f('contact', row.contact)}</td>
+      <td style="min-width:180px">${f('email', row.email)}</td>
+      <td style="min-width:100px">${f('tel', row.tel)}</td>
+      <td style="min-width:110px">${f('outdoorCold', row.outdoorCold)}</td>
+      <td style="min-width:110px">${f('outdoorHeat', row.outdoorHeat)}</td>
+      <td style="min-width:90px">${f('indoorPlugin', row.indoorPlugin)}</td>
+      <td><button class="btn-del" onclick="deleteSupplierRow(${i})">&#128465;</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function addSupplierRow() {
+  supplierData.push({ voltage:'', distributor:'', contact:'', email:'', tel:'', outdoorCold:'', outdoorHeat:'', indoorPlugin:'' });
+  renderSupplierEditTable();
+}
+
+function deleteSupplierRow(idx) {
+  supplierData.splice(idx, 1);
+  renderSupplierEditTable();
+}
+
+async function saveSupplierData() {
+  const updated = supplierData.map((row, i) => {
+    const newRow = { ...row };
+    document.querySelectorAll(`#supplier-edit-body input[data-sidx="${i}"]`).forEach(inp => {
+      newRow[inp.dataset.sfield] = inp.value;
+    });
+    return newRow;
+  });
+  const btn = document.getElementById('supplier-save-btn');
+  btn.textContent = 'กำลังบันทึก...';
+  btn.disabled = true;
+  try {
+    await saveToCloud(cableData, updated);
+    supplierData = updated;
+    renderSupplierDisplay();
+    renderSupplierEditTable();
+    const notice = document.getElementById('supplier-saved-notice');
+    notice.classList.add('show');
+    setTimeout(() => notice.classList.remove('show'), 2500);
+  } catch(e) {
+    alert('บันทึกไม่สำเร็จ: ' + e.message);
+  } finally {
+    btn.innerHTML = '&#128190; บันทึก';
+    btn.disabled = false;
+  }
+}
+
+function openSupplierEditor() {
+  renderSupplierEditTable();
+  document.getElementById('supplier-modal').classList.add('active');
+}
+function closeSupplierEditor() { document.getElementById('supplier-modal').classList.remove('active'); }
 
 function getDefaultData() {
   return [
@@ -370,11 +553,11 @@ async function saveData() {
     return newRow;
   });
 
-  const btn = document.querySelector('.btn-save');
+  const btn = document.getElementById('data-save-btn');
   btn.textContent = 'กำลังบันทึก...';
   btn.disabled = true;
   try {
-    await saveToCloud(updated);
+    await saveToCloud(updated, supplierData);
     cableData = updated;
     renderDataTable();
     calculate();
@@ -384,12 +567,13 @@ async function saveData() {
   } catch(e) {
     alert('บันทึกไม่สำเร็จ: ' + e.message);
   } finally {
-    btn.textContent = '&#128190; บันทึก';
+    btn.innerHTML = '&#128190; บันทึก';
     btn.disabled = false;
   }
 }
 
-function openPasswordModal() {
+function openPasswordModal(target) {
+  pendingTarget = target || 'data';
   document.getElementById('pw-input').value = '';
   document.getElementById('pw-error').style.display = 'none';
   document.getElementById('pw-modal').classList.add('active');
@@ -399,7 +583,8 @@ function openPasswordModal() {
 function checkPassword() {
   if (document.getElementById('pw-input').value === EDIT_PASSWORD) {
     document.getElementById('pw-modal').classList.remove('active');
-    openDataEditor();
+    if (pendingTarget === 'supplier') openSupplierEditor();
+    else openDataEditor();
   } else {
     document.getElementById('pw-error').style.display = 'block';
     document.getElementById('pw-input').value = '';
@@ -416,6 +601,9 @@ function closePwModal()    { document.getElementById('pw-modal').classList.remov
 
 document.getElementById('data-modal').addEventListener('click', function(e) {
   if (e.target === this) closeDataEditor();
+});
+document.getElementById('supplier-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeSupplierEditor();
 });
 
 function openLightbox(imgEl) {
