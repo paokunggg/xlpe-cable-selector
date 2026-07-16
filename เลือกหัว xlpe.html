@@ -172,8 +172,9 @@
       <span class="input-label">Type</span>
       <select class="filter-select" id="type-filter" onchange="calculate()">
         <option value="">ทั้งหมด</option>
-        <option value="Plugin">Plugin</option>
-        <option value="Outdoor">Outdoor</option>
+        <option value="Outdoor/Heat">Outdoor/Heat</option>
+        <option value="Outdoor/Cold">Outdoor/Cold</option>
+        <option value="Indoor">Indoor</option>
       </select>
 
       <hr class="divider" style="grid-column:1/-1">
@@ -342,6 +343,7 @@ async function fetchData() {
       cableData = rec.cables || getDefaultData();
       supplierData = rec.suppliers || getDefaultSupplierData();
     }
+    cableData = cableData.map(r => ({ ...r, type: r.type === 'Outdoor' ? 'Outdoor/Heat' : (r.type === 'Plugin' ? 'Indoor' : r.type) }));
   } catch(e) {
     cableData = getDefaultData();
     supplierData = getDefaultSupplierData();
@@ -510,7 +512,7 @@ function renderDataTable() {
   const tbody = document.getElementById('data-body');
   tbody.innerHTML = '';
   cableData.forEach((row, i) => {
-    const typeOpts = ['', 'Plugin', 'Outdoor'].map(t =>
+    const typeOpts = ['', 'Outdoor/Heat', 'Outdoor/Cold', 'Indoor'].map(t =>
       `<option value="${t}" ${row.type===t?'selected':''}>${t||'-- เลือก --'}</option>`
     ).join('');
     const tr = document.createElement('tr');
